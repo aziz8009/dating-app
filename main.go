@@ -3,6 +3,7 @@ package main
 import (
 	"dating-app-backend/internal/config"
 	"dating-app-backend/internal/handler"
+	"dating-app-backend/internal/middleware"
 	"dating-app-backend/internal/repository"
 	service "dating-app-backend/internal/services"
 
@@ -38,9 +39,14 @@ func main() {
 	router := gin.Default()
 	router.POST("/signup", h.SignUp)
 	router.POST("/login", h.Login)
-	router.POST("/swipe", swipeHandler.Swipe)           // Register the swipe route
-	router.GET("/packages", premiumHandler.GetPackages) // New endpoint to get packages
-	router.POST("/purchase", premiumHandler.Purchase)   // New endpoint to purchase package
+
+	// Apply auth middleware to routes that require authentication
+	authorized := router.Group("/", middleware.AuthMiddleware())
+	{
+		authorized.POST("/swipe", swipeHandler.Swipe)
+		authorized.GET("/packages", premiumHandler.GetPackages)
+		authorized.POST("/purchase", premiumHandler.Purchase)
+	}
 
 	router.Run(":5000")
 }
